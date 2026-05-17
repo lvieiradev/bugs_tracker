@@ -20,30 +20,61 @@ def allowed_file(filename):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    erro = None
+
     if request.method == 'POST':
         titulo = request.form['titulo']
         categoria = request.form['categoria']
         descricao = request.form['descricao']
         data_problema = request.form['data_problema']
-        
-        imagem = None
-        file = request.files.get('imagem')
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            imagem = filename
-            
+
         cur = mysql.connection.cursor()
-        cur.execute("""
-            INSERT INTO bugs (titulo, categoria, descricao, data_problema, imagem)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (titulo, categoria, descricao, data_problema, imagem))
-        mysql.connection.commit()
+        cur.execute("SELECT id FROM bugs WHERE titulo = %s", (titulo,))
+        bug_existente = cur.fetchone()
         cur.close()
 
-        return redirect(url_for('index', sucesso=1))
-    return render_template('index.html', sucesso=request.args.get('sucesso'))
+        if bug_existente:
+            erro = "Esse bug já foi reportado e nossa equipe já está trabalhando nele"
+        else:
+            imagem = None
+            file = request.files.get('imagem')
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                imagem = filename
+
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                INSERT INTO bugs (titulo, categoria, descricao, data_problema, imagem)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (titulo, categoria, descricao, data_problema, imagem))
+            mysql.connection.commit()
+            cur.close()
+
+            return redirect(url_for('index', sucesso=1))
+
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id, titulo, categoria, status, data_problema FROM bugs")
+    bugs = cur.fetchall()
+    cur.close()
+
+    return render_template('index.html', sucesso=request.args.get('sucesso'), bugs=bugs, erro=erro)
+@app.route('/admin', methods=['GET'])
+def admin():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id, titulo, categoria, status, data_problema FROM bugs")
+    bugs = cur.fetchall()
+    cur.close()
+    return render_template('admin.html', bugs=bugs)
+
+@app.route('/atualizar-status/<int:id>/<status>')
+def atualizar_status(id, status):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE bugs SET status = %s WHERE id = %s", (status, id))
+    mysql.connection.commit()
+    cur.close()
+    return redirect(url_for('admin'))
 
 if __name__ == '__main__':
     app.run(debug=True)
-
+    
