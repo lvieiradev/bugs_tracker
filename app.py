@@ -54,7 +54,7 @@ def index():
             return redirect(url_for('index', sucesso=1))
 
     cur = mysql.connection.cursor()
-    cur.execute("SELECT id, titulo, categoria, status, data_problema FROM bugs")
+    cur.execute("SELECT id, titulo, categoria, status, data_problema, imagem FROM bugs")
     bugs = cur.fetchall()
     cur.close()
 
@@ -62,7 +62,7 @@ def index():
 @app.route('/admin', methods=['GET'])
 def admin():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT id, titulo, categoria, status, data_problema FROM bugs")
+    cur.execute("SELECT id, titulo, categoria, status, data_problema, imagem FROM bugs")
     bugs = cur.fetchall()
     cur.close()
     return render_template('admin.html', bugs=bugs)

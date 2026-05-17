@@ -138,6 +138,7 @@
                     <th>Categoria</th>
                     <th>Status</th>
                     <th>Data</th>
+                    <th>Print</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -157,6 +158,13 @@
                         {% endif %}
                     </td>
                     <td>{{ bug[4] }}</td>
+                    <td>
+                        {% if bug[5] %}
+                        <a href="/static/uploads/{{ bug[5] }}" target="_blank">Ver imagem</a>
+                        {% else %}
+                        Sem imagem
+                        {% endif %}
+                    </td>
                     <td>
                         <a class="btn btn-aberto" href="/atualizar-status/{{ bug[0] }}/Aberto">🔴 Aberto</a>
                         <a class="btn btn-andamento" href="/atualizar-status/{{ bug[0] }}/Em andamento">🟡 Em
